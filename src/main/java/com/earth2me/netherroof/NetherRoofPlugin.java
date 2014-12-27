@@ -1,6 +1,7 @@
 package com.earth2me.netherroof;
 
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -31,6 +32,11 @@ public class NetherRoofPlugin extends JavaPlugin implements Listener
 		onPlayerMove(event);
 	}
 
+	public boolean isValid(Location location)
+	{
+		return location.getY() < THRESHOLD || location.getWorld().getEnvironment() != World.Environment.NETHER;
+	}
+
 	@SuppressWarnings("UnnecessaryReturnStatement")
 	@EventHandler(priority = EventPriority.LOW)
 	public void onPlayerMove(PlayerMoveEvent event)
@@ -44,7 +50,7 @@ public class NetherRoofPlugin extends JavaPlugin implements Listener
 		Location to = event.getTo();
 		Location from = event.getFrom();
 
-		if (to.getY() < THRESHOLD || player.isOp())
+		if (isValid(to) || player.isOp())
 		{
 			// Player is in valid zone or is an operator
 			return;
@@ -52,21 +58,21 @@ public class NetherRoofPlugin extends JavaPlugin implements Listener
 
 		event.setCancelled(true);
 
-		if (from.getY() < THRESHOLD)
+		if (isValid(from))
 		{
 			// Player was previously in valid zone
 			return;
 		}
 
 		Location spawn = to.getWorld().getSpawnLocation();
-		if (spawn.getY() < THRESHOLD)
+		if (isValid(spawn))
 		{
 			// Spawn location is valid
 			event.getPlayer().teleport(spawn);
 			return;
 		}
 
-		// Just ignore it; player can't move or place blocks anyway.  They'll need to use a command to leave.
+		// Just ignore it for now; player can't move or place blocks anyway.  They'll need to use a command to leave.
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
@@ -80,7 +86,7 @@ public class NetherRoofPlugin extends JavaPlugin implements Listener
 		Player player = event.getPlayer();
 		Location location = event.getBlockPlaced().getLocation();
 
-		if (location.getY() < THRESHOLD || player.isOp())
+		if (isValid(location) || player.isOp())
 		{
 			// Block is in valid zone or player is an operator
 			return;
